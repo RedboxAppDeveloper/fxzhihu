@@ -27,7 +27,12 @@ export default {
 			return Response.redirect(GITHUB_REPO, 302);
 		}
 
-		let match = path.match(/^\/question\/\d+\/answer\/(\d+)\/?$/);
+		let match = path.match(/\/favicon\.ico$/);
+		if (match) {
+			return Response.redirect('https://static.zhihu.com/heifetz/favicon.ico', 302);
+		}
+
+		match = path.match(/^\/question\/\d+\/answer\/(\d+)\/?$/);
 		if (match) {
 			const answerId = match[1];
 			return new Response(await answer(answerId, redirect, env), {
@@ -55,11 +60,6 @@ export default {
 					'Content-Type': 'text/html',
 				},
 			});
-		}
-
-		match = path.match(/\/favicon\.ico$/);
-		if (match) {
-			return Response.redirect('https://static.zhihu.com/heifetz/favicon.ico', 302);
 		}
 
 		// Redirect to the same URL under zhihu.com

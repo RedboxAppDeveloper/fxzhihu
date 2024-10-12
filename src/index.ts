@@ -57,6 +57,11 @@ export default {
 			});
 		}
 
+		match = path.match(/\/favicon\.ico$/);
+		if (match) {
+			return Response.redirect('https://static.zhihu.com/heifetz/favicon.ico', 302);
+		}
+
 		// Redirect to the same URL under zhihu.com
 		const zhihuUrl = `https://www.zhihu.com${path}`;
 		return Response.redirect(zhihuUrl, 302);

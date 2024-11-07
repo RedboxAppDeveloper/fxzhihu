@@ -21,10 +21,24 @@ export default {
 	async fetch(request, env, ctx): Promise<Response> {
 		const url = new URL(request.url);
 		const path = url.pathname;
-		const redirect = !['false', 'no'].includes(url.searchParams.get('redirect') || '')
-		
+		let redirect = !['false', 'no'].includes(url.searchParams.get('redirect') || '');
+		// Redirect unless the request is coming from Telegram
+		const referer = request.headers.get('Referer') || '';
+		if (!referer.toLowerCase().includes('https://t.me')) {
+			redirect = false;
+		}
+
 		if (path === '/') {
 			return Response.redirect(GITHUB_REPO, 302);
+		}
+
+		if (path === '/robots.txt') {
+			return new Response(`User-agent: *
+Disallow: /
+Allow: /question/*
+Allow: /p/*
+Allow: /answer/*
+`);
 		}
 
 		let match = path.match(/\/favicon\.ico$/);
@@ -32,7 +46,8 @@ export default {
 			return Response.redirect('https://static.zhihu.com/heifetz/favicon.ico', 302);
 		}
 
-		match = path.match(/^\/question\/\d+\/answer\/(\d+)\/?$/);
+
+		match = path.match(/^(?:\/question\/\d+)?\/answer\/(\d+)\/?$/);
 		if (match) {
 			const answerId = match[1];
 			return new Response(await answer(answerId, redirect, env), {
@@ -41,7 +56,7 @@ export default {
 				},
 			});
 		}
-		
+
 		match = path.match(/^\/p\/(\d+)\/?$/);
 		if (match) {
 			const articleId = match[1];
@@ -63,7 +78,7 @@ export default {
 		}
 
 		// Redirect to the same URL under zhihu.com
-		const zhihuUrl = `https://www.zhihu.com${path}`;
+		const zhihuUrl = new URL(path, `https://www.zhihu.com`).href;
 		return Response.redirect(zhihuUrl, 302);
 	},
 } satisfies ExportedHandler<Env>;
